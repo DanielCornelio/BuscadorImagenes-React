@@ -1,21 +1,37 @@
 import React,{Component} from 'react';
 import Buscador from './components/Buscador';
 import Resultado from './components/Resultado';
+import './App.css';
 class App extends Component{
   state={
     termino: '',
     imagenes: [],
-    pagina: ''
+    pagina: '',
+    cargando: false
   }
 
-  consultarAPI = () => {
+  consultarAPI = async () => {
     const termino = this.state.termino;
     const pagina = this.state.pagina;
     const url = `https://pixabay.com/api/?key=14041957-72613465ed5bac598477f9f2f&q=${termino}&per_page=30&page=${pagina}`;
     console.log(url)
-    fetch(url)
-    .then(respuesta => respuesta.json())
-    .then(resultado => this.setState({imagenes: resultado.hits}))
+    await fetch(url)
+    .then(respuesta => {
+      this.setState({
+        cargando: true
+      });
+      return respuesta.json()
+    })
+    .then(resultado => {
+      setTimeout(()=>{
+
+        this.setState({
+          imagenes: resultado.hits,
+          cargando: false
+        })
+
+      },2000);
+    })
   }
 
   datosBusqueda = (termino) =>{
@@ -57,6 +73,21 @@ class App extends Component{
     elemento.scrollIntoView('auto','start');
   }
   render(){
+    const cargando = this.state.cargando;
+    let resultado;
+    if(cargando){
+      resultado = <div className="spinner">
+                    <div className="double-bounce1"></div>
+                    <div className="double-bounce2"></div>
+                  </div>
+    }else{
+      resultado= <Resultado
+      imagenes={this.state.imagenes}
+      paginaAnterior= {this.paginaAnterior}
+      paginaSiguiente={this.paginaSiguiente}
+    />
+    }
+
     return (
     <div className="app container">
       <div className="jumbotron">
@@ -66,11 +97,7 @@ class App extends Component{
         />
       </div>
       <div className="row justify-content-center">
-        <Resultado
-          imagenes={this.state.imagenes}
-          paginaAnterior= {this.paginaAnterior}
-          paginaSiguiente={this.paginaSiguiente}
-        />
+        {resultado}
       </div>
     </div>
   );
